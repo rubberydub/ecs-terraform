@@ -175,22 +175,6 @@ resource "aws_security_group" "elb" {
     to_port     = 443
   }
 
-  ingress {
-    description = "Allow ICMP from trusted networks."
-    cidr_blocks = "${var.trusted_networks_cidr_blocks}"
-    protocol    = "icmp"
-    from_port   = 0
-    to_port     = 8
-  }
-
-  ingress {
-    description = "Allow TCP port 22 (SSH) from trusted networks."
-    cidr_blocks = "${var.trusted_networks_cidr_blocks}"
-    protocol    = "tcp"
-    from_port   = 443
-    to_port     = 443
-  }
-
   tags {
     Name        = "${var.environment_name}-elb-security-group"
     Environment = "${var.environment_name}"
@@ -215,6 +199,22 @@ resource "aws_security_group" "ecs-cluster" {
     protocol        = "-1"
     from_port       = 0
     to_port         = 0
+  }
+
+  ingress {
+    description = "Allow ICMP from trusted networks."
+    cidr_blocks = "${var.trusted_networks_cidr_blocks}"
+    protocol    = "icmp"
+    from_port   = 0
+    to_port     = 8
+  }
+
+  ingress {
+    description = "Allow TCP port 22 (SSH) from trusted networks."
+    cidr_blocks = "${var.trusted_networks_cidr_blocks}"
+    protocol    = "tcp"
+    from_port   = 443
+    to_port     = 443
   }
 
   egress {
@@ -247,6 +247,7 @@ data "template_file" "user-data" {
     cluster_name = "${var.environment_name}-ecs-cluster"
   }
 }
+
 resource "aws_launch_configuration" "launch-configuration" {
   name                        = "${var.environment_name}-launch-configuration"
   instance_type               = "${var.aws_instance_type}"

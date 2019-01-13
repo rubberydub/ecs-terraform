@@ -5,7 +5,8 @@ An example Terraform project to deploy an EC2 backed ECS cluster.
 
 ## TODO
 
-- Add ELB for SSH.
+- Add SSH bastion.
+- Add NAT gateway.
 - Example service.
 - Statuscake test for example service.
 - Cloudwatch?
