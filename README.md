@@ -30,5 +30,5 @@ Run Terraform:
 ```shell
 terraform init
 terraform plan -var-file=private.tfvars -var-file=mycluster.tfvars
-terraform plan -var-file=private.tfvars -var-file=mycluster.tfvars
+terraform apply -var-file=private.tfvars -var-file=mycluster.tfvars
 ```
