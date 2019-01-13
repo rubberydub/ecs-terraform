@@ -3,8 +3,6 @@
 
 An example Terraform project to deploy an EC2 backed ECS cluster.
 
-**WIP**
-
 ## TODO
 
 - Add ELB for SSH.
