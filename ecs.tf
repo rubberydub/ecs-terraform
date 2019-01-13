@@ -1,7 +1,7 @@
 #
-# ecs-cluster.tf
+# ecs.tf
 #
-# AWS ECS cluster and supporting infrastructure.
+# AWS ECS cluster, supporting infrastructure ans services.
 #
 
 provider "aws" {
@@ -36,7 +36,7 @@ resource "aws_iam_role" "instance-iam-role" {
       "Sid": "",
       "Effect": "Allow",
       "Principal": {
-        "Service": "ec2.amazonaws.com"
+        "Service": ["ecs.amazonaws.com","ec2.amazonaws.com"]
       },
       "Action": "sts:AssumeRole"
     }
@@ -354,12 +354,31 @@ data "template_file" "ssh-config" {
   }
 }
 
-resource "null_resource" "ssh-config" {
-  provisioner "local-exec" {
-    command = "echo '${data.template_file.ssh-config.rendered}' > ${var.environment_name}-ssh-config"
-  }
+#
+# ECS services.
+#
 
-  triggers {
-    template = "${data.template_file.ssh-config.rendered}"
+resource "aws_cloudwatch_log_group" "log-group" {
+  count = "${length(var.log_groups)}"
+  name  = "${var.environment_name}-${element(var.log_groups, count.index)}-log-group"
+
+  tags {
+    Name        = "${var.environment_name}-${element(var.log_groups, count.index)}-log-group"
+    Environment = "${var.environment_name}"
   }
+}
+
+resource "aws_ecs_task_definition" "task-definition" {
+  count                 = "${length(var.ecs_services)}"
+  family                = "${lookup(var.ecs_services[count.index], "family")}"
+  container_definitions = "${file(lookup(var.ecs_services[count.index], "container_definitions_file"))}"
+}
+
+resource "aws_ecs_service" "service" {
+  count           = "${length(var.ecs_services)}"
+  name            = "${lookup(var.ecs_services[count.index], "name")}"
+  desired_count   = "${lookup(var.ecs_services[count.index], "count")}"
+  task_definition = "${element(aws_ecs_task_definition.task-definition.*.arn, count.index)}"
+  cluster         = "${aws_ecs_cluster.ecs-cluster.id}"
+  # iam_role        = "${aws_iam_role.service-iam-role.arn}"
 }

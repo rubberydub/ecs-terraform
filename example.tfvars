@@ -10,10 +10,24 @@ aws_subnet_cidr_blocks = ["10.0.0.0/24", "10.0.1.0/24", "10.0.2.0/24"]
 
 aws_ami           = "ami-00f815702af6b8889" # ECS optimised Amazon Linux.
 aws_default_user  = "ec2-user"
-aws_instance_type = "t2.micro"
+aws_instance_type = "t2.small"
 
 aws_autoscaling_group_min_size         = 1
 aws_autoscaling_group_max_size         = 3
 aws_autoscaling_group_desired_capacity = 3
 
 environment_name = "example"
+
+log_groups = [
+  "kong-postgres",
+  "kong"
+]
+
+ecs_services = [
+  {
+    name                       = "kong"
+    family                     = "kong"
+    count                      = 1
+    container_definitions_file = "example-container-definition.json"
+  }
+]

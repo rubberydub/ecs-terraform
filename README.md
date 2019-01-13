@@ -29,8 +29,11 @@ $EDITOR mycluster.tfvars
 Run Terraform:
 ```shell
 terraform init
-terraform plan -var-file=private.tfvars -var-file=mycluster.tfvars
-terraform apply -var-file=private.tfvars -var-file=mycluster.tfvars
+terraform plan -var-file=private.tfvars -var-file=mycluster.tfvars -var-file=myservices.tfvars
+terraform apply -var-file=private.tfvars -var-file=mycluster.tfvars -var-file=myservices.tfvars
 ```
 
-Terraform will output an SSH config for the cluser to `<environment name>-ssh-config`.
+Output SSH config:
+```shell
+terraform output ssh-config
+```

@@ -1,0 +1,108 @@
+[
+    {
+        "name": "kong-postgres",
+        "image": "postgres:9.6",
+        "cpu": 200,
+        "memory": 1024,
+        "essential": true,
+        "environment": [
+            {
+                "name": "POSTGRES_USER",
+                "value": "kong"
+            },
+            {
+                "name": "POSTGRES_DB",
+                "value": "kong"
+            }
+        ],
+        "portMappings": [
+            {
+                "containerPort": 5432,
+                "hostPort": 5432,
+                "protocol": "tcp"
+            }
+        ],
+        "logConfiguration": {
+            "logDriver": "awslogs",
+            "options": {
+                "awslogs-group": "example-kong-postgres-log-group",
+                "awslogs-region": "ap-southeast-2",
+                "awslogs-stream-prefix": "example"
+            }
+        }
+    },
+    {
+        "name": "kong",
+        "image": "rubberydub/kong-ecs-docker:latest",
+        "cpu": 200,
+        "memory": 512,
+        "essential": false,
+        "links": [
+            "kong-postgres:kong-postgres"
+        ],
+        "environment": [
+            {
+                "name": "KONG_DATABASE",
+                "value": "postgres"
+            },
+            {
+                "name": "KONG_PG_HOST",
+                "value": "kong-postgres"
+            },
+            {
+                "name": "KONG_PG_PORT",
+                "value": "5432"
+            },
+            {
+                "name": "KONG_PROXY_ACCESS_LOG",
+                "value": "/dev/stdout"
+            },
+            {
+                "name": "KONG_ADMIN_ACCESS_LOG",
+                "value": "/dev/stdout"
+            },
+            {
+                "name": "KONG_PROXY_ERROR_LOG",
+                "value": "/dev/stderr"
+            },
+            {
+                "name": "KONG_ADMIN_ERROR_LOG",
+                "value": "/dev/stderr"
+            },
+            {
+                "name": "KONG_ADMIN_LISTEN",
+                "value": "0.0.0.0:8001, 0.0.0.0:8444 ssl"
+            }
+        ],
+        "portMappings": [
+            {
+                "containerPort": 8000,
+                "hostPort": 8000,
+                "protocol": "tcp"
+            },
+            {
+                "containerPort": 8443,
+                "hostPort": 8443,
+                "protocol": "tcp"
+            },
+            {
+                "containerPort": 8001,
+                "hostPort": 8001,
+                "protocol": "tcp"
+            },
+            {
+                "containerPort": 8444,
+                "hostPort": 8444,
+                "protocol": "tcp"
+            }
+        ],
+        "logConfiguration": {
+            "logDriver": "awslogs",
+            "options": {
+                "awslogs-group": "example-kong-log-group",
+                "awslogs-region": "ap-southeast-2",
+                "awslogs-stream-prefix": "awslogs-example"
+            }
+        }
+    }
+]

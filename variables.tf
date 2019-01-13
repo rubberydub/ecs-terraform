@@ -71,3 +71,13 @@ variable "aws_autoscaling_group_desired_capacity" {
 variable "environment_name" {
   description = "A general purpose name for the environment."
 }
+
+variable "log_groups" {
+  description = "Log groups for the service containers."
+  type        = "list"
+}
+
+variable "ecs_services" {
+  description = "ECS services to be deployed."
+  type        = "list"
+}

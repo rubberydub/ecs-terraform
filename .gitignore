@@ -1,5 +1,5 @@
+private.tfvars
 .terraform
 terraform.tfstate
 terraform.tfstate.backup
-private.tfvars
 *-ssh-config
