@@ -10,6 +10,10 @@ provider "aws" {
   region     = "${var.aws_region}"
 }
 
+#
+# IAM resources.
+#
+
 data "aws_iam_policy" "instance-iam-policy" {
   arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"
 }
@@ -102,6 +106,10 @@ resource "aws_key_pair" "key-pair" {
   key_name   = "${var.aws_key_pair_name}"
   public_key = "${file(var.ssh_key)}"
 }
+
+#
+# VPC resources.
+#
 
 resource "aws_vpc" "vpc" {
   cidr_block           = "10.0.0.0/16"
@@ -202,19 +210,35 @@ resource "aws_security_group" "ecs-cluster" {
   }
 
   ingress {
-    description = "Allow ICMP from trusted networks."
+    description = "Allow ping from trusted networks."
+    cidr_blocks = "${var.trusted_networks_cidr_blocks}"
+    protocol    = "icmp"
+    from_port   = 8
+    to_port     = -1
+  }
+
+  ingress {
+    description = "Allow pong from trusted networks."
     cidr_blocks = "${var.trusted_networks_cidr_blocks}"
     protocol    = "icmp"
     from_port   = 0
-    to_port     = 8
+    to_port     = -1
+  }
+
+  ingress {
+    description = "Allow path MTU discovery from trusted networks."
+    cidr_blocks = "${var.trusted_networks_cidr_blocks}"
+    protocol    = "icmp"
+    from_port   = 3
+    to_port     = 4
   }
 
   ingress {
     description = "Allow TCP port 22 (SSH) from trusted networks."
     cidr_blocks = "${var.trusted_networks_cidr_blocks}"
     protocol    = "tcp"
-    from_port   = 443
-    to_port     = 443
+    from_port   = 22
+    to_port     = 22
   }
 
   egress {
@@ -231,6 +255,10 @@ resource "aws_security_group" "ecs-cluster" {
   }
 }
 
+#
+# EC2 and ECS resources.
+#
+
 resource "aws_ecs_cluster" "ecs-cluster" {
   name = "${var.environment_name}-ecs-cluster"
 
@@ -241,7 +269,7 @@ resource "aws_ecs_cluster" "ecs-cluster" {
 }
 
 data "template_file" "user-data" {
-  template = "${file("user-data.tpl")}"
+  template = "${file("templates/user-data.tpl")}"
 
   vars {
     cluster_name = "${var.environment_name}-ecs-cluster"
@@ -268,4 +296,70 @@ resource "aws_autoscaling_group" "autoscaling-group" {
   min_size             = "${var.aws_autoscaling_group_min_size}"
   max_size             = "${var.aws_autoscaling_group_max_size}"
   desired_capacity     = "${var.aws_autoscaling_group_desired_capacity}"
+
+  tag {
+    key                 = "Name"
+    value               = "${var.environment_name}-autoscaling-group"
+    propagate_at_launch = false
+  }
+
+  tag {
+    key                 = "Environment"
+    value               = "${var.environment_name}"
+    propagate_at_launch = true
+  }
+}
+
+#
+# Get the IPs of the ASG instances for the SSH config.
+# This must be done in this round about way, see:
+# https://github.com/terraform-providers/terraform-provider-aws/issues/511
+#
+
+data "aws_instances" "instances" {
+  depends_on = [ "aws_autoscaling_group.autoscaling-group" ]
+
+  instance_tags {
+    Environment = "${var.environment_name}"
+  }
+}
+
+data "aws_instance" "autoscaling-group-instances" {
+  count       = "${var.aws_autoscaling_group_desired_capacity}"
+  depends_on  = ["data.aws_instances.instances"]
+  instance_id = "${data.aws_instances.instances.ids[count.index]}"
+}
+
+#
+# SSH config.
+#
+
+data "template_file" "ssh-config-instance" {
+  template = "${file("templates/ssh-config-instance.tpl")}"
+  count    = "${var.aws_autoscaling_group_desired_capacity}"
+
+  vars {
+    index            = "${count.index}"
+    ip               = "${element(data.aws_instance.autoscaling-group-instances.*.public_ip, count.index)}"
+    environment_name = "${var.environment_name}"
+    user             = "${var.aws_default_user}"
+  }
+}
+
+data "template_file" "ssh-config" {
+  template = "$${value}\n"
+
+  vars {
+    value = "${join("\n", data.template_file.ssh-config-instance.*.rendered)}"
+  }
+}
+
+resource "null_resource" "ssh-config" {
+  provisioner "local-exec" {
+    command = "echo '${data.template_file.ssh-config.rendered}' > ${var.environment_name}-ssh-config"
+  }
+
+  triggers {
+    template = "${data.template_file.ssh-config.rendered}"
+  }
 }

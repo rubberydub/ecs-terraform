@@ -48,6 +48,10 @@ variable "aws_ami" {
   description = "AWS AMI for EC2 instances."
 }
 
+variable "aws_default_user" {
+  description = "AWS default user for EC2 instances."
+}
+
 variable "aws_instance_type" {
   description = "AWS EC2 instance type."
 }

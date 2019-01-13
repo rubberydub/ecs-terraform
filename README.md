@@ -5,11 +5,10 @@ An example Terraform project to deploy an EC2 backed ECS cluster.
 
 ## TODO
 
-- Add SSH bastion.
-- Add NAT gateway.
 - Example service.
 - Statuscake test for example service.
-- Cloudwatch?
+- Add SSH bastion.
+- Add NAT gateway.
 
 ## Usage
 
@@ -33,3 +32,5 @@ terraform init
 terraform plan -var-file=private.tfvars -var-file=mycluster.tfvars
 terraform apply -var-file=private.tfvars -var-file=mycluster.tfvars
 ```
+
+Terraform will output an SSH config for the cluser to `<environment name>-ssh-config`.
