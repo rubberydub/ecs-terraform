@@ -5,14 +5,17 @@ An example Terraform project to deploy an EC2 backed ECS cluster.
 
 ## TODO
 
-- Kong example:
-  - Add an ELB to expose Kong.
+- ECS Cluster:
+  - Add SSH bastion.
+  - Add NAT gateway.
+- Kong ECS service example:
+  - Switch to awsvpc network mode and clean up ingress.
   - Serve something with Kong.
   - Add a volume for the Postgres data.
-- Add a DNS entry with route53.
-- Statuscake test for example service.
-- Add SSH bastion.
-- Add NAT gateway.
+  - Add Kong dashboard.
+  - DNS entry with route53.
+  - SSL.
+  - Statuscake test.
 
 ## Usage
 
@@ -40,4 +43,10 @@ terraform apply -var-file=private.tfvars -var-file=mycluster.tfvars -var-file=my
 Output SSH config:
 ```shell
 terraform output ssh-config
+```
+
+Output Kong domains:
+```shell
+terraform output kong-dns
+terraform output kong-admin-dns
 ```

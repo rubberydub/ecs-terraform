@@ -37,9 +37,6 @@
         "cpu": 200,
         "memory": 512,
         "essential": false,
-        "links": [
-            "kong-postgres:kong-postgres"
-        ],
         "environment": [
             {
                 "name": "KONG_DATABASE",
@@ -47,7 +44,7 @@
             },
             {
                 "name": "KONG_PG_HOST",
-                "value": "kong-postgres"
+                "value": "localhost"
             },
             {
                 "name": "KONG_PG_PORT",

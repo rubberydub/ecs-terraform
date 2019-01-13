@@ -1,6 +1,8 @@
 #
 # example.tfvars
 #
+# Example tfvars.
+#
 
 aws_region             = "ap-southeast-2"
 aws_availability_zones = ["ap-southeast-2a", "ap-southeast-2b", "ap-southeast-2c"]
@@ -17,17 +19,3 @@ aws_autoscaling_group_max_size         = 3
 aws_autoscaling_group_desired_capacity = 3
 
 environment_name = "example"
-
-log_groups = [
-  "kong-postgres",
-  "kong"
-]
-
-ecs_services = [
-  {
-    name                       = "kong"
-    family                     = "kong"
-    count                      = 1
-    container_definitions_file = "example-container-definition.json"
-  }
-]

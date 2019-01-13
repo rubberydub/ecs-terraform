@@ -1,7 +1,82 @@
 #
-# ecs.tf
+# ecs-cluster.tf
 #
 # AWS ECS cluster, supporting infrastructure ans services.
+#
+
+#
+# Variables.
+#
+
+variable "ssh_key" {
+  description = "Public SSH key for AWS key pair."
+}
+
+variable "trusted_networks_cidr_blocks" {
+  description = "Trusted networks to be allowed to ingress with ICMP and SSH into the environment."
+  type        = "list"
+}
+
+variable "aws_key_pair_name" {
+  description = "AWS key pair name."
+}
+
+variable "aws_access_key_id" {
+  description = "AWS access key id."
+}
+
+variable "aws_secret_access_key" {
+  description = "AWS secret access key."
+}
+
+variable "aws_region" {
+  description = "AWS region."
+}
+
+variable "aws_availability_zones" {
+  description = "AWS availability zones."
+  type        = "list"
+}
+
+variable "aws_vpc_cidr_block" {
+  description = "AWS VPC CIDR block."
+}
+
+variable "aws_subnet_cidr_blocks" {
+  description = "AWS subnet CIDR blocks. Each availability zone has one subnet."
+  type        = "list"
+}
+
+variable "aws_ami" {
+  description = "AWS AMI for EC2 instances."
+}
+
+variable "aws_default_user" {
+  description = "AWS default user for EC2 instances."
+}
+
+variable "aws_instance_type" {
+  description = "AWS EC2 instance type."
+}
+
+variable "aws_autoscaling_group_min_size" {
+  description = "AWS EC2 autoscaling group minimum size."
+}
+
+variable "aws_autoscaling_group_max_size" {
+  description = "AWS EC2 autoscaling group maximum size."
+}
+
+variable "aws_autoscaling_group_desired_capacity" {
+  description = "AWS EC2 autoscaling group desired capacity."
+}
+
+variable "environment_name" {
+  description = "A general purpose name for the environment."
+}
+
+#
+# Provider.
 #
 
 provider "aws" {
@@ -183,6 +258,14 @@ resource "aws_security_group" "elb" {
     to_port     = 443
   }
 
+  egress {
+    description = "Allow all traffic."
+    cidr_blocks = ["0.0.0.0/0"]
+    protocol    = "-1"
+    from_port   = 0
+    to_port     = 0
+  }
+
   tags {
     Name        = "${var.environment_name}-elb-security-group"
     Environment = "${var.environment_name}"
@@ -355,30 +438,9 @@ data "template_file" "ssh-config" {
 }
 
 #
-# ECS services.
+# Output.
 #
 
-resource "aws_cloudwatch_log_group" "log-group" {
-  count = "${length(var.log_groups)}"
-  name  = "${var.environment_name}-${element(var.log_groups, count.index)}-log-group"
-
-  tags {
-    Name        = "${var.environment_name}-${element(var.log_groups, count.index)}-log-group"
-    Environment = "${var.environment_name}"
-  }
-}
-
-resource "aws_ecs_task_definition" "task-definition" {
-  count                 = "${length(var.ecs_services)}"
-  family                = "${lookup(var.ecs_services[count.index], "family")}"
-  container_definitions = "${file(lookup(var.ecs_services[count.index], "container_definitions_file"))}"
-}
-
-resource "aws_ecs_service" "service" {
-  count           = "${length(var.ecs_services)}"
-  name            = "${lookup(var.ecs_services[count.index], "name")}"
-  desired_count   = "${lookup(var.ecs_services[count.index], "count")}"
-  task_definition = "${element(aws_ecs_task_definition.task-definition.*.arn, count.index)}"
-  cluster         = "${aws_ecs_cluster.ecs-cluster.id}"
-  # iam_role        = "${aws_iam_role.service-iam-role.arn}"
+output "ssh-config" {
+  value = "${data.template_file.ssh-config.rendered}"
 }
