@@ -1,5 +1,5 @@
 #
-# test.tfvars
+# example.tfvars
 #
 
 aws_region             = "ap-southeast-2"
