@@ -13,7 +13,6 @@ An example Terraform project to deploy an EC2 backed ECS cluster.
   - Serve something with Kong.
   - Add a volume for the Postgres data.
   - Add Kong dashboard.
-  - DNS entry with route53.
   - SSL.
   - Statuscake test.
 
