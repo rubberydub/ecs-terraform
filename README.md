@@ -44,9 +44,3 @@ Output SSH config:
 ```shell
 terraform output ssh-config
 ```
-
-Output Kong domains:
-```shell
-terraform output kong-dns
-terraform output kong-admin-dns
-```

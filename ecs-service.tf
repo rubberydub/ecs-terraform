@@ -4,6 +4,10 @@
 # Example ECS service.
 #
 
+data "aws_route53_zone" "zone" {
+  name = "rubberydub.com."
+}
+
 resource "aws_cloudwatch_log_group" "kong-postgres-log-group" {
   name  = "${var.environment_name}-kong-postgres-log-group"
 
@@ -91,10 +95,26 @@ resource "aws_elb" "kong_admin_elb" {
   }
 }
 
-output "kong-dns" {
-  value = "${aws_elb.kong_elb.dns_name}"
+resource "aws_route53_record" "kong_record" {
+  zone_id = "${data.aws_route53_zone.zone.zone_id}"
+  name    = "example.kong.${data.aws_route53_zone.zone.name}"
+  type    = "A"
+
+  alias {
+    name                   = "${aws_elb.kong_elb.dns_name}"
+    zone_id                = "${aws_elb.kong_elb.zone_id}"
+    evaluate_target_health = true
+  }
 }
 
-output "kong-admin-dns" {
-  value = "${aws_elb.kong_admin_elb.dns_name}"
+resource "aws_route53_record" "kong_admin_record" {
+  zone_id = "${data.aws_route53_zone.zone.zone_id}"
+  name    = "admin.kong.${data.aws_route53_zone.zone.name}"
+  type    = "A"
+
+  alias {
+    name                   = "${aws_elb.kong_admin_elb.dns_name}"
+    zone_id                = "${aws_elb.kong_admin_elb.zone_id}"
+    evaluate_target_health = true
+  }
 }
